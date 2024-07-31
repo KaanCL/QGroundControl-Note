@@ -94,7 +94,6 @@ Aşağıdaki şema, QGC mimarisini göstermektedir. QGC'nin ön ucu için dört 
 2. **Flyview**
 3. **Settings View**
 4. **Setup View**
-5. 
 
 <img src="https://media.licdn.com/dms/image/C5612AQHVnPg8Kf2FqA/article-inline_image-shrink_1000_1488/0/1641558978546?e=1727913600&v=beta&t=apzFP0CqO6jkoFrfE0CrXyaOwjx_-qmc38cFRQ9xuCQ">
 
