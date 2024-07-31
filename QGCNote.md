@@ -96,7 +96,7 @@ Aşağıdaki şema, QGC mimarisini göstermektedir. QGC'nin ön ucu için dört 
 4. **Setup View**
 5. 
 
-![1641558978546.jpg](https://prod-files-secure.s3.us-west-2.amazonaws.com/05f2bc3a-34c5-4bc8-b18b-6fda5890294c/485f0545-9bfe-4eaa-b5ab-a8582bba8214/1641558978546.jpg)
+<img src="https://media.licdn.com/dms/image/C5612AQHVnPg8Kf2FqA/article-inline_image-shrink_1000_1488/0/1641558978546?e=1727913600&v=beta&t=apzFP0CqO6jkoFrfE0CrXyaOwjx_-qmc38cFRQ9xuCQ">
 
 ### 
 
