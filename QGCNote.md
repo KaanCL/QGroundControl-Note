@@ -148,3 +148,91 @@ Slot, bir signal alındığında yürütülen bir işlevdir. Slot, bir signal'e 
 ### QGroundControl'de Signal ve Slot Kullanımı
 
 QGC, Qt'nin signal ve slot mekanizmasını yoğun bir şekilde kullanır. Örneğin, bir drone'un konum verilerini güncellemek, kullanıcı arayüzündeki bileşenleri güncellemek veya kullanıcı etkileşimlerine yanıt vermek için signal ve slot kullanılır.
+
+# QGC den Pluginlere Veri Aktarımı
+
+### QGroundControl ve MAVLink Veri Akışı
+
+1. **Veri Toplama**: QGC, drone'dan gelen MAVLink mesajlarını toplar. Bu mesajlar, telemetri verileri, sensör verileri, görev bilgileri ve durum güncellemeleri gibi çeşitli bilgileri içerir.
+2. **Veri İşleme**: Alınan MAVLink mesajları, QGC'nin çekirdek bileşenleri tarafından işlenir. Bu işleme süreci, mesajların ayrıştırılmasını, doğrulanmasını ve ilgili bileşenlere yönlendirilmesini içerir.
+3. **Veri Dağıtımı**: İşlenen veriler, QGC'nin çeşitli modüllerine ve eklentilerine yönlendirilir. Bu modüller ve eklentiler, belirli işlevleri yerine getirmek için bu verileri kullanır.
+
+### MAVLink Mesaj Türleri ve Eklentilere İletilen Veriler
+
+### Görev İlgili Mesajlar
+
+- **MISSION_COUNT**: Görev planının toplam öğe sayısını belirtir.
+- **MISSION_ITEM**: Tek bir görev öğesinin (mission item) ayrıntılarını içerir. Bu mesaj, waypoint'ler, takeoff, land, vs. gibi çeşitli görev öğelerini tanımlar.
+- **MISSION_REQUEST**: Araç, belirli bir görev öğesini istemek için bu mesajı gönderir.
+- **MISSION_ACK**: Görev planının başarıyla alındığını onaylar.
+- **MISSION_CLEAR_ALL**: Tüm görev öğelerini temizlemek için kullanılır.
+
+### Telemetri ve Durum Mesajları
+
+- **HEARTBEAT**: Araç ve yer istasyonu arasında bağlantının canlı olduğunu belirtir. Bu mesaj, sistem durumu, uçuş modu ve sistem tipi gibi bilgileri içerir.
+- **ATTITUDE**: Aracın yuvarlanma (roll), yunuslama (pitch) ve sapma (yaw) açılarının yanı sıra açısal hızlarını bildirir.
+- **GLOBAL_POSITION_INT**: Aracın küresel konumunu (enlem, boylam, yükseklik) ve hızını (kuzey, doğu, aşağı) bildirir.
+- **LOCAL_POSITION_NED**: Aracın yerel koordinat sistemindeki konumunu ve hızını (kuzey, doğu, aşağı) bildirir.
+- **SYS_STATUS**: Batarya durumu, iletişim hataları ve sensör durumları gibi sistem durum bilgilerini içerir
+- **GPS_RAW_INT**: GPS verilerini içerir (konum, hız, doğruluk, uydu sayısı vb.).
+
+### Komut ve Kontrol Mesajları
+
+- **COMMAND_LONG**: Araca belirli bir komut gönderir (örneğin, motorları başlat, kalibrasyon yap, vb.).
+- **SET_MODE**: Uçuş modunu değiştirmek için kullanılır.
+- **MANUAL_CONTROL**: Manuel kontrol verilerini (joystick girişleri gibi) araca gönderir.
+- **RC_CHANNELS_OVERRIDE**: RC kanallarının yerini almak için kullanılır (manuel RC sinyali yerine).
+
+### Sensör Verileri ve Diğer Mesajlar
+
+- **RAW_IMU**: Ham IMU verilerini (ivmeölçer, jiroskop, manyetometre) içerir.
+- **SCALED_PRESSURE**: Barometrik basınç ve sıcaklık verilerini içerir.
+- **VFR_HUD**: Hız, yüksek irtifa, başlık, tırmanış hızı gibi uçuş göstergesi verilerini içerir.
+- **BATTERY_STATUS**: Batarya gerilimi, akımı ve pil durumu gibi batarya bilgilerini içerir.
+
+### Görev Bilgilerinin MAVLink Mesajları ile Gönderilmesi
+
+MAVLink, JSON formatını doğrudan desteklemez. Bu nedenle, QGC görev bilgilerini MAVLink mesajlarına dönüştürür ve bu mesajları drone'a gönderir. Görev bilgilerini iletmek için kullanılan temel MAVLink mesajları şunlardır:
+
+1. **MISSION_COUNT**: Drone'a kaç adet görev öğesi gönderileceğini belirtir.
+2. **MISSION_ITEM** veya **MISSION_ITEM_INT**: Her bir görev öğesinin ayrıntılarını içerir.
+3. **MISSION_ACK**: Görev öğelerinin alındığını onaylar.
+
+### JSON'dan MAVLink Mesajlarına Dönüşüm
+
+QGC, görev dosyasını yüklediğinde JSON formatındaki görev öğelerini okuyup bunları MAVLink mesajlarına dönüştürür. Bu süreçte, her bir görev öğesi, `MISSION_ITEM` veya `MISSION_ITEM_INT` mesajına çevrilir.
+
+### MISSION_ITEM Mesajı İçeriği
+
+- **target_system**: Hedef sistem (drone) kimliği.
+- **target_component**: Hedef bileşen kimliği.
+- **seq**: Görev öğesi sıra numarası.
+- **frame**: Koordinat çerçevesi (örneğin, MAV_FRAME_GLOBAL_RELATIVE_ALT).
+- **command**: MAVLink komutu (örneğin, MAV_CMD_NAV_WAYPOINT).
+- **current**: Bu öğenin şu anki görev öğesi olup olmadığını belirler.
+- **autocontinue**: Bu öğeden sonra otomatik olarak bir sonraki öğeye geçilip geçilmeyeceğini belirler.
+- **param1 - param7**: Görev öğesi için parametreler (örneğin, konum, yükseklik).
+
+<img src="https://prod-files-secure.s3.us-west-2.amazonaws.com/05f2bc3a-34c5-4bc8-b18b-6fda5890294c/9dfb1db6-ac56-4c27-a9da-c03e365df363/Untitled.png">
+
+### Diagram Üzerindeki Akış
+
+1. **GeoFenceManager.cpp** ve **RallyPointManager.cpp**:
+    - Bu iki yöneticiden gelen `MissionItem` verileri PlanMasterController'a iletilir.
+2. **PlanMasterController**:
+    - Görev öğelerini alır ve tüm görev planını yönetir.
+    - Görev öğelerini MAVLink mesajlarına dönüştürür.
+3. **MAVLink**:
+    - Dönüştürülen MAVLink mesajları drone'a gönderilir.
+
+,
+
+QGroundControl (QGC), firmware'e özgü kodu tüm firmware'ler için genel olan koddan ayırmak için bir plugin mimarisi kullanır. İki ana plugin bu işlevi yerine getirir: **FirmwarePlugin** ve **AutoPilotPlugin**.
+
+Bu plugin mimarisi, standart QGC'nin sağlayabileceğinden daha fazla özelleştirme yapmak isteyen özel yapılar tarafından da kullanılır.
+
+- **FirmwarePlugin**: MAVLink'in genellikle standartlaştırılmamış kısımlarına standart bir arayüz sağlar.
+- **AutoPilotPlugin**: Araç Kurulumu için kullanıcı arayüzünü sağlar.
+- **QGCCorePlugin**: QGC uygulamasının araçlarla ilgili olmayan özelliklerini standart bir arayüz aracılığıyla açığa çıkarır. Bu, özel yapılar tarafından QGC özellik setini ihtiyaçlarına göre ayarlamak için kullanılır.
+
+
