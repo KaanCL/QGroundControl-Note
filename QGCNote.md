@@ -213,8 +213,6 @@ QGC, görev dosyasını yüklediğinde JSON formatındaki görev öğelerini oku
 - **autocontinue**: Bu öğeden sonra otomatik olarak bir sonraki öğeye geçilip geçilmeyeceğini belirler.
 - **param1 - param7**: Görev öğesi için parametreler (örneğin, konum, yükseklik).
 
-<img src="https://prod-files-secure.s3.us-west-2.amazonaws.com/05f2bc3a-34c5-4bc8-b18b-6fda5890294c/9dfb1db6-ac56-4c27-a9da-c03e365df363/Untitled.png">
-
 ### Diagram Üzerindeki Akış
 
 1. **GeoFenceManager.cpp** ve **RallyPointManager.cpp**:
